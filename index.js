@@ -130,23 +130,24 @@ function getValidMoves(board) {
   return validMoves;
 }
 
-// Function to evaluate a line of 4 positions (game's heuristic)
+
+// Function to evaluate a line of 4 positions (game's heuristic and how it works)
 function evaluateLine(line, player) {
   let score = 0;
   const opponent = player === 1 ? 2 : 1;
 
   // Evaluate player's line
   if (line.filter(cell => cell === player).length === 4) {
-    score += 100;
+    score += 100; // Add a high score if the line has 4 cells occupied by the player
   } else if (line.filter(cell => cell === player).length === 3 && line.filter(cell => cell === 0).length === 1) {
-    score += 5;
+    score += 5; // Add a moderate score if the line has 3 cells occupied by the player and 1 empty cell
   } else if (line.filter(cell => cell === player).length === 2 && line.filter(cell => cell === 0).length === 2) {
-    score += 2;
+    score += 2; // Add a low score if the line has 2 cells occupied by the player and 2 empty cells
   }
 
   // Evaluate opponent's line
   if (line.filter(cell => cell === opponent).length === 3 && line.filter(cell => cell === 0).length === 1) {
-    score -= 4;
+    score -= 4; // Subtract a score if the line has 3 cells occupied by the opponent and 1 empty cell
   }
 
   return score;
