@@ -1,7 +1,7 @@
 {
-  "name": "prueba",
+  "name": "connect4",
   "version": "1.0.0",
-  "description": "",
+  "description": "A program created to play the game Connect4 with Artificial Intelligence in JS.",
   "main": "index.js",
   "type": "module",
   "dependencies": {
@@ -10,6 +10,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Oscar Estrada",
   "license": "ISC"
 }
