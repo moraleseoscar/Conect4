@@ -1,277 +1,281 @@
+/*
+  Oscar Oswaldo Estrada Morales
+  Artificial Intelligence for Connect 4
+*/
 import io from 'socket.io-client';
 
-  // Función para verificar si se algun jugador ha ganado.
-  function verificarGanador(tablero, jugador) {
-    // Verificar filas
-    for (let i = 0; i < tablero.length; i++) {
-      for (let j = 0; j <= tablero[i].length - 4; j++) {
-        if (
-          tablero[i][j] === jugador &&
-          tablero[i][j + 1] === jugador &&
-          tablero[i][j + 2] === jugador &&
-          tablero[i][j + 3] === jugador
-        ) {
-          return true;
-        }
+// Function to check if any player has won.
+function checkWinner(board, player) {
+  // Check rows
+  for (let i = 0; i < board.length; i++) {
+    for (let j = 0; j <= board[i].length - 4; j++) {
+      if (
+        board[i][j] === player &&
+        board[i][j + 1] === player &&
+        board[i][j + 2] === player &&
+        board[i][j + 3] === player
+      ) {
+        return true;
       }
     }
-  
-    // Verificar columnas
-    for (let i = 0; i <= tablero.length - 4; i++) {
-      for (let j = 0; j < tablero[i].length; j++) {
-        if (
-          tablero[i][j] === jugador &&
-          tablero[i + 1][j] === jugador &&
-          tablero[i + 2][j] === jugador &&
-          tablero[i + 3][j] === jugador
-        ) {
-          return true;
-        }
-      }
-    }
-  
-    // Verificar diagonales (de izquierda a derecha)
-    for (let i = 0; i <= tablero.length - 4; i++) {
-      for (let j = 0; j <= tablero[i].length - 4; j++) {
-        if (
-          tablero[i][j] === jugador &&
-          tablero[i + 1][j + 1] === jugador &&
-          tablero[i + 2][j + 2] === jugador &&
-          tablero[i + 3][j + 3] === jugador
-        ) {
-          return true;
-        }
-      }
-    }
-  
-    // Verificar diagonales (de derecha a izquierda)
-    for (let i = 0; i <= tablero.length - 4; i++) {
-      for (let j = 3; j < tablero[i].length; j++) {
-        if (
-          tablero[i][j] === jugador &&
-          tablero[i + 1][j - 1] === jugador &&
-          tablero[i + 2][j - 2] === jugador &&
-          tablero[i + 3][j - 3] === jugador
-        ) {
-          return true;
-        }
-      }
-    }
-  
-    return false;
   }
 
-  // Función para evaluar el tablero en su estado actual
-  function evaluarTablero(tablero, jugadorMax, jugadorMin) {
-    let puntuacionTotal = 0;
-  
-    // Evaluar lineas horizontales
-    for (let fila = 0; fila < tablero.length; fila++) {
-      for (let columna = 0; columna <= tablero[fila].length - 4; columna++) {
-        const linea = tablero[fila].slice(columna, columna + 4);
-        puntuacionTotal += evaluarLinea(linea, jugadorMax, jugadorMin);
+  // Check columns
+  for (let i = 0; i <= board.length - 4; i++) {
+    for (let j = 0; j < board[i].length; j++) {
+      if (
+        board[i][j] === player &&
+        board[i + 1][j] === player &&
+        board[i + 2][j] === player &&
+        board[i + 3][j] === player
+      ) {
+        return true;
       }
     }
-  
-    // Evaluar lineas verticales
-    for (let columna = 0; columna < tablero[0].length; columna++) {
-      for (let fila = 0; fila <= tablero.length - 4; fila++) {
-        const linea = [
-          tablero[fila][columna],
-          tablero[fila + 1][columna],
-          tablero[fila + 2][columna],
-          tablero[fila + 3][columna]
-        ];
-        puntuacionTotal += evaluarLinea(linea, jugadorMax, jugadorMin);
-      }
-    }
-  
-    // Evaluar lineas diagonales (de izquierda a derecha)
-    for (let fila = 0; fila <= tablero.length - 4; fila++) {
-      for (let columna = 0; columna <= tablero[fila].length - 4; columna++) {
-        const linea = [
-          tablero[fila][columna],
-          tablero[fila + 1][columna + 1],
-          tablero[fila + 2][columna + 2],
-          tablero[fila + 3][columna + 3]
-        ];
-        puntuacionTotal += evaluarLinea(linea, jugadorMax, jugadorMin);
-      }
-    }
-  
-    // Evaluar lineas diagonales (de derecha a izquierda)
-    for (let fila = 0; fila <= tablero.length - 4; fila++) {
-      for (let columna = 3; columna < tablero[fila].length; columna++) {
-        const linea = [
-          tablero[fila][columna],
-          tablero[fila + 1][columna - 1],
-          tablero[fila + 2][columna - 2],
-          tablero[fila + 3][columna - 3]
-        ];
-        puntuacionTotal += evaluarLinea(linea, jugadorMax, jugadorMin);
-      }
-    }
-  
-    return puntuacionTotal;
-  }
-  
-  // Función para obtener los movimientos válidos
-  function obtenerMovimientosValidos(tablero) {
-    const movimientosValidos = [];
-    for (let columna = 0; columna < tablero[0].length; columna++) {
-      if (tablero[0][columna] === 0) {
-        movimientosValidos.push(columna);
-      }
-    }
-    return movimientosValidos;
   }
 
-// Función para evaluar una linea de 4 posiciones (la heurística del juego)
-function evaluarLinea(linea, jugador) {
-    let puntuacion = 0;
-    const oponente = jugador === 1 ? 2 : 1;
-  
-    // Evaluar linea del jugador
-    if (linea.filter(cell => cell === jugador).length === 4) {
-      puntuacion += 100;
-    } else if (linea.filter(cell => cell === jugador).length === 3 && linea.filter(cell => cell === 0).length === 1) {
-      puntuacion += 5;
-    } else if (linea.filter(cell => cell === jugador).length === 2 && linea.filter(cell => cell === 0).length === 2) {
-      puntuacion += 2;
+  // Check diagonals (left to right)
+  for (let i = 0; i <= board.length - 4; i++) {
+    for (let j = 0; j <= board[i].length - 4; j++) {
+      if (
+        board[i][j] === player &&
+        board[i + 1][j + 1] === player &&
+        board[i + 2][j + 2] === player &&
+        board[i + 3][j + 3] === player
+      ) {
+        return true;
+      }
     }
-  
-    // Evaluar linea del oponente
-    if (linea.filter(cell => cell === oponente).length === 3 && linea.filter(cell => cell === 0).length === 1) {
-      puntuacion -= 4;
-    }
-  
-    return puntuacion;
   }
-  
-  // Función para realizar un movimiento en el tablero
-  function hacerMovimiento(tablero, columna, jugador) {
-    for (let fila = tablero.length - 1; fila >= 0; fila--) {
-      if (tablero[fila][columna] === 0) {
-        tablero[fila][columna] = jugador;
+
+  // Check diagonals (right to left)
+  for (let i = 0; i <= board.length - 4; i++) {
+    for (let j = 3; j < board[i].length; j++) {
+      if (
+        board[i][j] === player &&
+        board[i + 1][j - 1] === player &&
+        board[i + 2][j - 2] === player &&
+        board[i + 3][j - 3] === player
+      ) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+// Function to evaluate the current state of the board
+function evaluateBoard(board, playerMax, playerMin) {
+  let totalScore = 0;
+
+  // Evaluate horizontal lines
+  for (let row = 0; row < board.length; row++) {
+    for (let column = 0; column <= board[row].length - 4; column++) {
+      const line = board[row].slice(column, column + 4);
+      totalScore += evaluateLine(line, playerMax, playerMin);
+    }
+  }
+
+  // Evaluate vertical lines
+  for (let column = 0; column < board[0].length; column++) {
+    for (let row = 0; row <= board.length - 4; row++) {
+      const line = [
+        board[row][column],
+        board[row + 1][column],
+        board[row + 2][column],
+        board[row + 3][column]
+      ];
+      totalScore += evaluateLine(line, playerMax, playerMin);
+    }
+  }
+
+  // Evaluate diagonal lines (left to right)
+  for (let row = 0; row <= board.length - 4; row++) {
+    for (let column = 0; column <= board[row].length - 4; column++) {
+      const line = [
+        board[row][column],
+        board[row + 1][column + 1],
+        board[row + 2][column + 2],
+        board[row + 3][column + 3]
+      ];
+      totalScore += evaluateLine(line, playerMax, playerMin);
+    }
+  }
+
+  // Evaluate diagonal lines (right to left)
+  for (let row = 0; row <= board.length - 4; row++) {
+    for (let column = 3; column < board[row].length; column++) {
+      const line = [
+        board[row][column],
+        board[row + 1][column - 1],
+        board[row + 2][column - 2],
+        board[row + 3][column - 3]
+      ];
+      totalScore += evaluateLine(line, playerMax, playerMin);
+    }
+  }
+
+  return totalScore;
+}
+
+// Function to get valid moves
+function getValidMoves(board) {
+  const validMoves = [];
+  for (let column = 0; column < board[0].length; column++) {
+    if (board[0][column] === 0) {
+      validMoves.push(column);
+    }
+  }
+  return validMoves;
+}
+
+// Function to evaluate a line of 4 positions (game's heuristic)
+function evaluateLine(line, player) {
+  let score = 0;
+  const opponent = player === 1 ? 2 : 1;
+
+  // Evaluate player's line
+  if (line.filter(cell => cell === player).length === 4) {
+    score += 100;
+  } else if (line.filter(cell => cell === player).length === 3 && line.filter(cell => cell === 0).length === 1) {
+    score += 5;
+  } else if (line.filter(cell => cell === player).length === 2 && line.filter(cell => cell === 0).length === 2) {
+    score += 2;
+  }
+
+  // Evaluate opponent's line
+  if (line.filter(cell => cell === opponent).length === 3 && line.filter(cell => cell === 0).length === 1) {
+    score -= 4;
+  }
+
+  return score;
+}
+
+// Function to make a move on the board
+function makeMove(board, column, player) {
+  for (let row = board.length - 1; row >= 0; row--) {
+    if (board[row][column] === 0) {
+      board[row][column] = player;
+      break;
+    }
+  }
+}
+
+// Minimax function with alpha-beta pruning
+function minimax(board, depth, alpha, beta, isMaximizer, playerMax, playerMin) {
+  const validMoves = getValidMoves(board);
+  const maxWinner = checkWinner(board, playerMax);
+  const minWinner = checkWinner(board, playerMin);
+  const tie = validMoves.length === 0;
+
+  if (depth === 0 || maxWinner || minWinner || tie) {
+    if (maxWinner) {
+      return 1000000000;
+    } else if (minWinner) {
+      return -1000000000;
+    } else {
+      return evaluateBoard(board, playerMax);
+    }
+  }
+
+  if (isMaximizer) {
+    let maxValue = -Infinity;
+    for (let column of validMoves) {
+      const newBoard = JSON.parse(JSON.stringify(board));
+      makeMove(newBoard, column, playerMax);
+      const value = minimax(newBoard, depth - 1, alpha, beta, false, playerMax, playerMin);
+      maxValue = Math.max(maxValue, value);
+      alpha = Math.max(alpha, value);
+      if (alpha >= beta) {
         break;
       }
     }
-  }
-  
-  // Función Minimax con poda alfa-beta
-  function minimax(tablero, profundidad, alfa, beta, esMaximizador, jugadorMax, jugadorMin) {
-    const movimientosValidos = obtenerMovimientosValidos(tablero);
-    const ganadorMax = verificarGanador(tablero, jugadorMax);
-    const ganadorMin = verificarGanador(tablero, jugadorMin);
-    const empate = movimientosValidos.length === 0;
-  
-    if (profundidad === 0 || ganadorMax || ganadorMin || empate) {
-      if (ganadorMax) {
-        return 1000000000;
-      } else if (ganadorMin) {
-        return -1000000000;
-      } else {
-        return evaluarTablero(tablero, jugadorMax);
+    return maxValue;
+  } else {
+    let minValue = Infinity;
+    for (let column of validMoves) {
+      const newBoard = JSON.parse(JSON.stringify(board));
+      makeMove(newBoard, column, playerMin);
+      const value = minimax(newBoard, depth - 1, alpha, beta, true, playerMax, playerMin);
+      minValue = Math.min(minValue, value);
+      beta = Math.min(beta, value);
+      if (beta <= alpha) {
+        break;
       }
     }
-  
-    if (esMaximizador) {
-      let valorMax = -Infinity;
-      for (let columna of movimientosValidos) {
-        const nuevoTablero = JSON.parse(JSON.stringify(tablero));
-        hacerMovimiento(nuevoTablero, columna, jugadorMax);
-        const valor = minimax(nuevoTablero, profundidad - 1, alfa, beta, false, jugadorMax, jugadorMin);
-        valorMax = Math.max(valorMax, valor);
-        alfa = Math.max(alfa, valor);
-        if (alfa >= beta) {
-          break;
-        }
-      }
-      return valorMax;
-    } else {
-      let valorMin = Infinity;
-      for (let columna of movimientosValidos) {
-        const nuevoTablero = JSON.parse(JSON.stringify(tablero));
-        hacerMovimiento(nuevoTablero, columna, jugadorMin);
-        const valor = minimax(nuevoTablero, profundidad - 1, alfa, beta, true, jugadorMax, jugadorMin);
-        valorMin = Math.min(valorMin, valor);
-        beta = Math.min(beta, valor);
-        if (beta <= alfa) {
-          break;
-        }
-      }
-      return valorMin;
-    }
+    return minValue;
   }
-  
-  // Función para que el jugador automático realice su movimiento
-  function hacerMovimientoAutomatico(tablero, jugador) {
-    const movimientosValidos = obtenerMovimientosValidos(tablero);
-    let mejorValor = -Infinity;
-    let mejorColumna = movimientosValidos[Math.floor(Math.random() * movimientosValidos.length)];
-    const profundidad = 7; // Profundidad de búsqueda del árbol de juego
-  
-    for (let columna of movimientosValidos) {
-      const nuevoTablero = JSON.parse(JSON.stringify(tablero));
-      hacerMovimiento(nuevoTablero, columna, jugador);
-      const valor = minimax(nuevoTablero, profundidad, -Infinity, Infinity, false, jugador, jugador === 1 ? 2 : 1);
-  
-      if (valor > mejorValor) {
-        mejorValor = valor;
-        mejorColumna = columna;
-      }
-    }
-    return mejorColumna;
-  }
+}
 
-//console.log(message);
-// const io = require('socket.io-client')
-const serverUrl = "http://192.168.1.104:4000"
-const socket = io(serverUrl)
+// Function for the AI player to make a move
+function makeAutomaticMove(board, player) {
+  const validMoves = getValidMoves(board);
+  let bestScore = -Infinity;
+  let bestColumn = validMoves[Math.floor(Math.random() * validMoves.length)];
+  const depth = 7; // Search depth of the game tree
 
-const tournamentID = 142857
+  for (let column of validMoves) {
+    const newBoard = JSON.parse(JSON.stringify(board));
+    makeMove(newBoard, column, player);
+    const score = minimax(newBoard, depth, -Infinity, Infinity, false, player, player === 1 ? 2 : 1);
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestColumn = column;
+    }
+  }
+  return bestColumn;
+}
+
+// Parameters to connect to the server.
+const serverUrl = "http://192.168.1.104:4000";
+const socket = io(serverUrl);
+
+const tournamentID = 142857;
 
 socket.on('connect', () => {
-    console.log("Connected to server")
+  console.log("Connected to the server");
 
-    socket.emit('signin', {
-        user_name: "Oscar",
-        tournament_id: tournamentID,
-        user_role: 'player'
-    })
-})
-
-// Sign in correcto.
-socket.on('ok_signin', () => {
-    console.log("Login")
-})
-
-socket.on('ready', function(data){
-    var gameID = data.game_id;
-    var playerTurnID = data.player_turn_id;
-    var board = data.board;
-    console.log(board)
-    var movimiento = 0;
-    movimiento = hacerMovimientoAutomatico(board, playerTurnID)
-    console.log(gameID)
-    console.log(movimiento)
-    socket.emit('play', {
-      tournament_id: tournamentID,
-      player_turn_id: playerTurnID,
-      game_id: gameID,
-      movement: movimiento
-    });
+  socket.emit('signin', {
+    user_name: "Oscar",
+    tournament_id: tournamentID,
+    user_role: 'player'
+  });
 });
 
-socket.on('finish', function(data){
+// Successful sign-in.
+socket.on('ok_signin', () => {
+  console.log("Login");
+});
+
+// Activate player when ready.
+socket.on('ready', function (data) {
+  var gameID = data.game_id;
+  var playerTurnID = data.player_turn_id;
+  var board = data.board;
+
+  var movement = 0;
+  movement = makeAutomaticMove(board, playerTurnID); // Analyze the move to make.
+
+  socket.emit('play', {
+    tournament_id: tournamentID,
+    player_turn_id: playerTurnID,
+    game_id: gameID,
+    movement: movement
+  });
+});
+
+// Function when the game finishes and prepare the player for the next match.
+socket.on('finish', function (data) {
   var gameID = data.game_id;
   var playerTurnID = data.player_turn_id;
   var winnerTurnID = data.winner_turn_id;
   var board = data.board;
-    
+
   socket.emit('player_ready', {
     tournament_id: tournamentID,
     player_turn_id: playerTurnID,
     game_id: gameID
-  });
+  });
 });
