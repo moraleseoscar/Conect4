@@ -214,7 +214,7 @@ function makeAutomaticMove(board, player) {
   const validMoves = getValidMoves(board);
   let bestScore = -Infinity;
   let bestColumn = validMoves[Math.floor(Math.random() * validMoves.length)];
-  const depth = 7; // Search depth of the game tree
+  const depth = 6; // Search depth of the game tree
 
   for (let column of validMoves) {
     const newBoard = JSON.parse(JSON.stringify(board));
